@@ -1,4 +1,4 @@
-name: Upload Report Artifact
+name: Upload and Publish Report
 
 on:
   workflow_dispatch:
@@ -21,3 +21,26 @@ jobs:
         with:
           name: report
           path: report/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: report
+
+  deploy:
+    needs: upload-report
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Add report link to summary
+        run: echo "[📊 View Test Report](${{ steps.deployment.outputs.page_url }}/log.html)" >> $GITHUB_STEP_SUMMARY
